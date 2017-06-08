@@ -1,0 +1,54 @@
+- name: 'CREATE sudoers.d file'
+  file: dest='/etc/sudoers.d' owner=root group=root mode=0750 state=directory
+  become: true
+
+- name: 'CHECK sudoers include sudoers.d file - comment line'
+  lineinfile: 
+        dest: /etc/sudoers 
+        line: '## Read drop-in files from /etc/sudoers.d (the # here does not mean a comment)'
+        regexp: "^## (Read drop-in .*)|(Include subfiles)"
+        insertafter: EOF
+  become: true
+
+- name: 'CHECK sudoers include sudoers.d file - command line'
+  lineinfile: 
+        dest: /etc/sudoers 
+        line: '#includedir /etc/sudoers.d'
+        regexp: "^#includedir .*"
+        insertafter: EOF
+  become: true
+
+- name: 'REMOVE any active Sudo Cmnd_Alias duplicates from /etc/sudoers'
+  replace: 
+        dest: /etc/sudoers
+        regexp: '^(\s*)Cmnd_Alias {{item|upper}} =(\s+.*)?$'
+        replace: '# Cmnd_Alias {{item|upper}} = \2'
+  with_items: "{{sudo_cmnd_alias}}"
+  when: sudo_cmnd_alias is defined 
+
+- name: 'REMOVE any active Sudo Host_Alias duplicates from /etc/sudoers'
+  replace: 
+        dest: /etc/sudoers
+        regexp: '^(\s*)Host_Alias {{item|upper}} =(\s+.*)?$'
+        replace: '# Host_Alias {{item|upper}} = \2'
+  with_items: "{{sudo_host_alias}}"
+  when: sudo_host_alias is defined
+
+- name: 'REMOVE any active Sudo Group_Alias duplicates from /etc/sudoers'
+  replace:
+        dest: /etc/sudoers
+        regexp: '^(\s*)Host_Alias {{item|upper}} =(\s+.*)?$'
+        replace: '# Host_Alias {{item|upper}} = \2'
+  with_items: "{{sudo_group_alias}}"
+  when: sudo_group_alias is defined
+
+
+- name: 'PREAPARE /etc/sudoers.d/group-sudoers file'
+  template: 
+        src: 'etc/sudoers.d/group_sudoers.j2'
+        dest: '/etc/sudoers.d/group_sudoers'
+        group: root
+        owner: root
+        mode: 0750
+        validate: 'visudo -cf %s'
+  become: true

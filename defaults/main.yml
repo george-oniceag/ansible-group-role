@@ -1,0 +1,62 @@
+# ../defaults/main.yml 
+# Default variable file for role: GROUPS-ROLE  //groups-role \\
+# Can be use as example to create the variable file for playbook groups
+#
+####################################
+# Format:
+# system_groups: 
+#       - name: <<name_of_the_group>>
+#         status: <<status_of_the_group>> | if not defined - value is 'present'
+#                       | options: active/present/yes/true
+#                       |          absent/removed/no/false/inactive/deleted
+#         group_id: <<the_static_id_of_the_group>> | WARNING !! Please check group id usage before using this option
+#         system_group: <<yes/no | default('no')>> | Define wheather the group will be a system group
+#         sudo :  ## define sudo rights if needed
+#             - place: <<location_of_run>>  ## The location from witch the user can run command
+#               run_as: <<user|user:group>> ## Run the command as user or as user from group
+#               command: <<CMND_ALIAS|command>>|['<<CMND_ALIAS|command>>',<<CMND_ALIAS|command>>',...] 
+#               nopasswd: <<'yes/no'>> ## Set no password required flagh
+#             - place: .... etc
+########################################
+system_groups:
+        - name: masteradmins
+          status: present 
+          group_id: 1101
+          system_group: no
+          sudo:
+              - place: ALL
+                run_as: 'ALL:ALL'
+                command: ALL
+                nopasswd: "yes"
+        - name: powerusers
+          status: present
+          group_id: 1102
+        - name: guests
+          status: present
+          sudo:
+                - place: 
+                  run_as: 
+                  command: 
+                - place: '127.0.0.1'
+                  run_as: 'andy_the_nobody:nobody'
+                  comand: ['/usr/sbin/arping','usr/sbin/ausearch']
+                  nopasswd: "no"
+        - name: ssh_admins
+        - name: ssh_users
+        - name: junk_group
+          status: absent
+          
+sudo_cmnd_alias:
+        SHELLS: ['/sbin/sh','/usr/bin/sh','/usr/bin/csh','/usr/bin/ksh','/usr/local/bin/tcsh','/usr/bin/rsh','/usr/local/bin/zsh']
+        REBOOT: ['/usr/sbin/reboot']
+        SOFTWARE: ['/bin/rpm','/usr/bin/up2date','/usr/bin/yum']
+        SERVICES: ['/sbin/service','/sbin/chkconfig','/usr/bin/systemctl start','/usr/bin/systemctl stop','/usr/bin/systemctl reload','/usr/bin/systemctl restart','/usr/bin/systemctl status','/usr/bin/systemctl enable','/usr/bin/systemctl disable']
+
+sudo_host_alias:
+        GROUP_LOCALHOST: ['localhost','127.0.0.1']
+        GROUP_LOCALNET: ['192.168.0.0/24']
+
+sudo_group_alias:
+        GROUP_MASTERADMINS: ['root','masteradmins']
+        GROUP_USERS: ['users']
+        GROUP_NOBODY:
