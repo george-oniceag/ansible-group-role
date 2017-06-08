@@ -1,7 +1,12 @@
+# ..tasks/configure_sudoers.yml
+# Tasks that prepare the defined sudo right for the specified groups
+#
+# Create the /etc/sudoers.d directory . This is where non-default sudo config files will be pressent
 - name: 'CREATE sudoers.d file'
   file: dest='/etc/sudoers.d' owner=root group=root mode=0750 state=directory
   become: true
 
+# Check wheather the /etc/sudoers.d directory is included in the reading of sudo config files. Change will be made in the main /etc/sudoers file -- add line comment if not pressent
 - name: 'CHECK sudoers include sudoers.d file - comment line'
   lineinfile: 
         dest: /etc/sudoers 
@@ -10,6 +15,7 @@
         insertafter: EOF
   become: true
 
+# Check wheather the /etc/sudoers.d directory is included in the reading of sudo config files. Change will be made in the main /etc/sudoers file  - add include statement if not pressent
 - name: 'CHECK sudoers include sudoers.d file - command line'
   lineinfile: 
         dest: /etc/sudoers 
@@ -18,6 +24,7 @@
         insertafter: EOF
   become: true
 
+# Remove any active SUDO command aliasses the might become duplicats in the /etc/sudoers.d/group_sudoers file wich will be generated/updated by the role
 - name: 'REMOVE any active Sudo Cmnd_Alias duplicates from /etc/sudoers'
   replace: 
         dest: /etc/sudoers
@@ -26,6 +33,7 @@
   with_items: "{{sudo_cmnd_alias}}"
   when: sudo_cmnd_alias is defined 
 
+# Remove any active SUDO host aliasses the might become duplicats in the /etc/sudoers.d/group_sudoers file wich will be generated/updated by the role 
 - name: 'REMOVE any active Sudo Host_Alias duplicates from /etc/sudoers'
   replace: 
         dest: /etc/sudoers
@@ -34,6 +42,7 @@
   with_items: "{{sudo_host_alias}}"
   when: sudo_host_alias is defined
 
+# Remove any active SUDO group aliasses the might become duplicats in the /etc/sudoers.d/group_sudoers file wich will be generated/updated by the role
 - name: 'REMOVE any active Sudo Group_Alias duplicates from /etc/sudoers'
   replace:
         dest: /etc/sudoers
@@ -42,7 +51,8 @@
   with_items: "{{sudo_group_alias}}"
   when: sudo_group_alias is defined
 
-- name: 'PREAPARE /etc/sudoers.d/group-sudoers file'
+# Prepare or update the /etc/sudoers.d/group-sudoers file with the defined role data and validate new configuration
+- name: 'PREAPARE /etc/sudoers.d/group_sudoers file'
   template: 
         src: 'etc/sudoers.d/group_sudoers.j2'
         dest: '/etc/sudoers.d/group_sudoers'

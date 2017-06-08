@@ -1,3 +1,5 @@
+# ../tasks/redhat_deps.yml
+# Install all required dependancies for role
 - name: Install required pkgs
   yum: name="{{item}}" state=present
   with_items: ['shadow-utils']

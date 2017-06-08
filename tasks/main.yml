@@ -1,11 +1,18 @@
+# ../tasks/main.yml
+# Main ANSIBLE-GROUP-ROLE file that agregates all configuration tasks
+# Contains only include statements for role
+# -
+# Prepare all ncessary dependancies for role
 - name: Prepare dependancies 
   include: "{{ansible_os_family|lower}}_deps.yml"
   tags: ['deps','group-role']
 
+# Start group configuration part
 - name: Configure groups
   include: configure_groups.yml
   tags: ['groups','group-role']
 
+# Start group sudo configuration part
 - name: Configure sudo status for groups
   include: configure_sudoers.yml
   tags: ['sudo','group-role']

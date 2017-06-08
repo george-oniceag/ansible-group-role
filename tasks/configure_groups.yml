@@ -1,3 +1,7 @@
+# ..tasks/configure_groups.yml
+# Tasks to configure defined droups on systems
+#
+# Create standard groups with no GID defined 
 - name: Create standard groups
   group: name="{{item}}" state=present system={{item.system_group|default('no')}}
   with_items: "{{system_groups}}"
@@ -6,6 +10,7 @@
         - item.group_id is not defined
         - item.status is not defined or item.status|lower == "present" or item.status|lower == "yes" or item.status|lower == "active" or item.status|lower == "true" 
 
+# Create advanced system groups or groups with predefined GID
 - name: Create advanced groups
   group: name="{{item}}" state=present gid="{{item.group_id}}" system={{item.system_group|default('no')}}
   with_items: "{{system_groups}}"
@@ -14,6 +19,7 @@
         - item.group_id is defined 
         - item.status is not defined or item.status|lower == "present" or item.status|lower == "yes" or item.status|lower == "active" or item.status|lower == "true" 
 
+# Remove any specified groups 
 - name: Remove groups
   group: name="{{item}}" state=absent
   with_items: "{{system_groups}}"
