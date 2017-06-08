@@ -1,5 +1,5 @@
 # ../defaults/main.yml 
-# Default variable file for role: GROUPS-ROLE  //groups-role \\
+# Default variable file for role: {{role_path|basename}}
 # Can be use as example to create the variable file for playbook groups
 #
 ####################################
