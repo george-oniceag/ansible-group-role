@@ -35,6 +35,11 @@ system_groups:
                   run_as: 'andy_the_nobody:nobody'
                   comand: ['/usr/sbin/arping','usr/sbin/ausearch']
                   nopasswd: "no"
+        - name: guests_extended
+          sudo:
+                - place: GROUP_LOCALHOST
+                  run_as: 'guest:guest'
+                  comand: ['SHELLS','REBOOT']
         - name: ssh_admins
         - name: ssh_users
         - name: junk_group

@@ -42,7 +42,6 @@
   with_items: "{{sudo_group_alias}}"
   when: sudo_group_alias is defined
 
-
 - name: 'PREAPARE /etc/sudoers.d/group-sudoers file'
   template: 
         src: 'etc/sudoers.d/group_sudoers.j2'
