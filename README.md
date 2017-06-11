@@ -33,13 +33,13 @@ system_groups:
                   command:
                 - place: '127.0.0.1'
                   run_as: 'andy_the_nobody:nobody'
-                  comand: ['/usr/sbin/arping','/usr/sbin/ausearch']
+                  command: ['/usr/sbin/arping','/usr/sbin/ausearch']
                   nopasswd: "no"
         - name: guests_extended
           sudo:
                 - place: GROUP_LOCALHOST
                   run_as: 'guest:guest'
-                  comand: ['SHELLS','REBOOT']
+                  command: ['SHELLS','REBOOT']
         - name: ssh_admins
         - name: ssh_users
         - name: junk_group
