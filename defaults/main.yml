@@ -37,15 +37,15 @@ system_groups:
                 - place: 
                   run_as: 
                   command: 
-                - place: '127.0.0.1'
-                  run_as: 'andy_the_nobody:nobody'
-                  comand: ['/usr/sbin/arping','usr/sbin/ausearch']
+                - place: '10.0.0.1'
+                  run_as: 'nobody:nobody'
+                  command: ['/usr/sbin/arping','/usr/sbin/ausearch','/usr/bin/ping']
                   nopasswd: "no"
         - name: guests_extended
           sudo:
                 - place: GROUP_LOCALHOST
                   run_as: 'guest:guest'
-                  comand: ['SHELLS','REBOOT']
+                  command: ['SHELLS','REBOOT']
         - name: ssh_admins
         - name: ssh_users
         - name: junk_group

@@ -33,7 +33,7 @@ system_groups:
                   command:
                 - place: '127.0.0.1'
                   run_as: 'andy_the_nobody:nobody'
-                  comand: ['/usr/sbin/arping','usr/sbin/ausearch']
+                  comand: ['/usr/sbin/arping','/usr/sbin/ausearch']
                   nopasswd: "no"
         - name: guests_extended
           sudo:

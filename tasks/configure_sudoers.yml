@@ -58,6 +58,6 @@
         dest: '/etc/sudoers.d/group_sudoers'
         group: root
         owner: root
-        mode: 0750
+        mode: 0440
         validate: 'visudo -cf %s'
   become: true

@@ -60,11 +60,11 @@
 {% set tmp_value = tmp_value+' NOPASSWD:' %}
 {% endif %}
 {% if value_sudo.command is defined and value_sudo.command is iterable and value_sudo.command is not string %}
-{% set tmp_value = tmp_value+' '+value_sudo.command.join(', ')  %}
+{% set tmp_value = tmp_value+' '+value_sudo.command|join(', ')  %}
 {% elif value_sudo.command is defined and value_sudo.command is not none %}
 {% set tmp_value = tmp_value+' '+value_sudo.command %} 
 {% else %}
-{% set tmp_value = tmp_value+' none' %}
+{% set tmp_value = tmp_value+' ALL' %}
 {% endif %}
 {{tmp_value}}
 {% endfor %}

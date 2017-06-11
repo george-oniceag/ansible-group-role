@@ -3,7 +3,7 @@
 #
 # Create standard groups with no GID defined 
 - name: Create standard groups
-  group: name="{{item}}" state=present system={{item.system_group|default('no')}}
+  group: name="{{item.name}}" state=present system={{item.system_group|default('no')}}
   with_items: "{{system_groups}}"
   become: true
   when:  
@@ -12,7 +12,7 @@
 
 # Create advanced system groups or groups with predefined GID
 - name: Create advanced groups
-  group: name="{{item}}" state=present gid="{{item.group_id}}" system={{item.system_group|default('no')}}
+  group: name="{{item.name}}" state=present gid="{{item.group_id}}" system={{item.system_group|default('no')}}
   with_items: "{{system_groups}}"
   become: true
   when: 
@@ -21,7 +21,7 @@
 
 # Remove any specified groups 
 - name: Remove groups
-  group: name="{{item}}" state=absent
+  group: name="{{item.name}}" state=absent
   with_items: "{{system_groups}}"
   become: true
   when: 
