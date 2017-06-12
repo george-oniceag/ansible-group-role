@@ -5,13 +5,13 @@ A role for [Ansible](http://www.ansible.com) to configure Operating System Group
 This role can provide the following features:
 - configure Groups;
 - configure sudo rights for Groups
-- configure Users with: custome Home, custom shell, master group and optional groups 
-- configure System Users
-- configure sudo rights for Users
+- configure Users with: custome [Home](https://en.wikipedia.org/wiki/Home_directory), custom [Shell](https://en.wikipedia.org/wiki/Unix_shell), master Group and optional Groups 
+- configure System type Users
+- configure [sudo](https://www.sudo.ws/man/1.8.18/sudo.man.html) rights for Users
 - move User Home
-- User password management (Please use this with ansible-vault)
+- User password management (Please use this with [ansible-vault](http://docs.ansible.com/ansible/playbooks_vault.html) )
 - User SSH public key management
-- advanced sudo configuration available: configurable Host, Command, User and Group Aliasss
+- advanced [sudo](https://www.sudo.ws/man/1.8.18/sudo.man.html) configuration available: configurable Host, Command, User and Group Aliasss
 - advanced sanity checks for sudo configuration in order to warn user regarding the location of the error
 
 ## Compatibility
@@ -135,19 +135,23 @@ The **system_groups** variable is used to define the groups on the local or remo
 ```yaml
  system_users:
        - name: <<name_of_the_user>>
-         status: <<status_of_the_user>> | if not defined - value is 'present'
-                       | options: active/present/yes/true
-                       |          absent/removed/no/false/inactive/deleted
-         group: <<primary_user_group | default('users')>> | Specify the primary user group
-         comment: <<shot_information_about_the_user>> | if not defined - value is 'Ansible defined USER'
-         createhome: <<yes/no | default('yes') | Specify wheather to create user home or not.
-         home: <<the_location_of_the_home_directory | default(omit) >> | Specify the location of the users home directory.
-                                                                       | DEFAULT - system default location (/home/<usernmae>
-         system_user: <<set_as_system_user | default('no') >> | WARNING !! Changing this setting after user is created will not be possible
-         user_id: <<the_static_id_of_the_user>> | WARNING !! Please check group id usage before using this option
-         groups: <<list_of_additional_groups>> | WARNING !! If left Empty the user will be removed from all groups except the master group
-         shell: <<the_shell_wich_the_user_can_user>> | WARNING !! Please provide an existing shell or user will not be functionall
-         password: <<password_string>>               | WARNING !! Please use with ansible-vault for seacurity reasons
+         status: <<status_of_the_user|default('present')>> # it not defined - value is 'present'
+                       # options for "status_of_the_user" : <<active|present|yes|true>>
+                       #                                    <<absent|removed|no|false|inactive|deleted>>
+         group: <<primary_user_group|default('users')>> # Specify the primary user group
+         comment: <<shot_information_about_the_user|default('Ansible defined USER')>> # Short user descriptions or comment
+         createhome: <<yes/no | default('yes')>> # Specify wheather to create user home or not. Default 'yes'
+         home: <<the_location_of_the_home_directory|default(omit)>> # Specify the location of the users home directory.
+                                                                    # DEFAULT - use the system default location
+         system_user: <<set_as_system_user|default('no')>> # Define the user as a system user
+                       # WARNING !! Changing this setting after user is created will not be possible
+         user_id: <<the_static_id_of_the_user>> # Provide a manual Group ID for the coresponding user
+                                                # WARNING !! Please check group id usage before using this option
+         groups: <<list_of_additional_groups>> # Provide additional groups for the user to be added in
+                     # WARNING !! If left Empty the user will be removed from all groups except the master group
+         shell: <<the_shell_wich_the_user_can_user>> # The default shell on which the user will function
+                # WARNING !! Please provide an existing shell or user will not be functionall
+         password: <<password_string>>               # WARNING !! Please use with ansible-vault for seacurity reasons
          update_password: <<always|on_create>> # Specify wheatehr the password will be updated or not. Please use the specified options
          sudo :  ## define sudo rights if needed
              - place: <<location_of_run>>  ## The location from witch the user can run command
