@@ -1,0 +1,31 @@
+# ..tasks/command_check.ymal
+# Tasks that facilitate loop io loop for complex command checking
+#
+# !!! WARNING !!! 
+# Please use loop_controll with varaible: command_to_check
+#
+#Set facts depending on the need 
+- set_fact: var_command="{{command_to_check.value}}"
+  when: command_to_check.value is defined
+- set_fact: var_command="{{command_to_check.1.command}}"
+  when: command_to_check.1 is defined and command_to_check.1.command is defined
+
+#OLD DEBUGING for future improvements
+# - debug: msg="{{commant_to_check}}"
+
+#Check for command path on the system using full specified path
+- name: 'CHECK if command path on system'
+  stat: path={{item|regex_replace("\s+(.*)","")}}
+  with_items: "{{var_command}}"
+  when: item | search("/.*/")
+  register: command_check
+
+#FAIL if path por command is not found on the system
+- name: 'FAIL if command path is not availabel on system'
+  fail:
+        msg: "ERROR !!! Specified command : {{item.item}} does not exist !!!"
+  with_items: "{{command_check.results}}"
+  when:
+        - command_check is defined
+        - item.stat is defined and item.stat.exists == false
+

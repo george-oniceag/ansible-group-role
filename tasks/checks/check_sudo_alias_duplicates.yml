@@ -1,0 +1,35 @@
+# ..tasks/checks/check_sudo_alias_duplicates.yml
+# Tasks to check wheather there are duplicate aliasses in the SUDO specified files
+#
+# !!! WARNING !!!
+# Dict used by check:
+#   CK_SUDO_DATA: 
+#       CK_pattern:  '<<item|regex>>'
+#       CK_patterm_replace: '<<item>>' 
+#       CK_exclusion_pattern: '<<file_name|regex>>'
+#       CK_location:  '<<item|regex>>'
+#
+# CHECK active SUDO aliasses the might become duplicats
+- name: 'CHECK for any active SUDO Alias  duplicates in {{CK_SUDO_DATA.CK_location}}'
+  shell: "grep -irnEl --exclude={{CK_SUDO_DATA.CK_exclusion_pattern}} '{{CK_SUDO_DATA.CK_pattern}}' {{CK_SUDO_DATA.CK_location}}"
+  register: status
+  failed_when: status.rc >= 2
+  changed_when: status.rc == 0
+
+# OLD DEBUGGING
+#- debug: 
+#        msg: "{{status}}"
+#- debug: 
+#        msg: '{{CK_SUDO_DATA}}'
+
+- name: 'REMOVE any active Sudo Alias : {{item}} duplicates from {{location_item}}'
+  replace:
+        dest: "{{location_item}}"
+        regexp: '{{CK_SUDO_DATA.CK_pattern}}'
+        replace: '{{CK_SUDO_DATA.CK_pattern_replace}}'
+  with_items: "{{status.stdout_lines}}"
+  loop_control: 
+        loop_var: location_item
+  when: status.stdout_lines is defined
+
+

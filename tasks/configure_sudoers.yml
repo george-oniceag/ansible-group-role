@@ -4,7 +4,6 @@
 # Create the /etc/sudoers.d directory . This is where non-default sudo config files will be pressent
 - name: 'CREATE sudoers.d file'
   file: dest='/etc/sudoers.d' owner=root group=root mode=0750 state=directory
-  become: true
 
 # Check wheather the /etc/sudoers.d directory is included in the reading of sudo config files. Change will be made in the main /etc/sudoers file -- add line comment if not pressent
 - name: 'CHECK sudoers include sudoers.d file - comment line'
@@ -13,7 +12,6 @@
         line: '## Read drop-in files from /etc/sudoers.d (the # here does not mean a comment)'
         regexp: "^## (Read drop-in .*)|(Include subfiles)"
         insertafter: EOF
-  become: true
 
 # Check wheather the /etc/sudoers.d directory is included in the reading of sudo config files. Change will be made in the main /etc/sudoers file  - add include statement if not pressent
 - name: 'CHECK sudoers include sudoers.d file - command line'
@@ -22,42 +20,79 @@
         line: '#includedir /etc/sudoers.d'
         regexp: "^#includedir .*"
         insertafter: EOF
-  become: true
 
-# Remove any active SUDO command aliasses the might become duplicats in the /etc/sudoers.d/group_sudoers file wich will be generated/updated by the role
-- name: 'REMOVE any active Sudo Cmnd_Alias duplicates from /etc/sudoers'
-  replace: 
-        dest: /etc/sudoers
-        regexp: '^(\s*)Cmnd_Alias {{item|upper}} =(\s+.*)?$'
-        replace: '# Cmnd_Alias {{item|upper}} = \2'
+
+# CHECK and REMOVE  any active SUDO command aliasses the might become duplicats in the /etc/sudoers.d/system_sudoers file wich will be generated/updated by the role
+- name: 'CHECK & REMOVE Posible Duplicate Command Aliasses in the sudo file structure'
+  vars: 
+        CK_SUDO_DATA: 
+                CK_pattern: '^(|\s+)Cmnd_Alias(\s+){{item|upper}}(\s+)=(\s+.*)?$'
+                CK_pattern_replace: '# Cmnd_Alias {{item|upper}} = \4'
+                CK_exclusion_pattern: 'system_sudoers'
+                CK_location: '/etc/sudoer*'
+  include: "checks/check_sudo_alias_duplicates.yml"
   with_items: "{{sudo_cmnd_alias}}"
-  when: sudo_cmnd_alias is defined 
+  when: sudo_cmnd_alias is defined
 
-# Remove any active SUDO host aliasses the might become duplicats in the /etc/sudoers.d/group_sudoers file wich will be generated/updated by the role 
-- name: 'REMOVE any active Sudo Host_Alias duplicates from /etc/sudoers'
-  replace: 
-        dest: /etc/sudoers
-        regexp: '^(\s*)Host_Alias {{item|upper}} =(\s+.*)?$'
-        replace: '# Host_Alias {{item|upper}} = \2'
+# CHECK and REMOVE any active SUDO host aliasses the might become duplicats in the /etc/sudoers.d/system_sudoers file wich will be generated/updated by the role 
+- name: 'CHECK & REMOVE any active Sudo Host_Alias duplicates in the sudo file structure'
+  vars:
+        CK_SUDO_DATA:
+                CK_pattern: '^(|\s+)Host_Alias(\s+){{item|upper}}(\s+)=(\s+.*)?$'
+                CK_pattern_replace: '# Host_Alias {{item|upper}} = \4'
+                CK_exclusion_pattern: 'system_sudoers'
+                CK_location: '/etc/sudoer*'
+  include: "checks/check_sudo_alias_duplicates.yml"
   with_items: "{{sudo_host_alias}}"
   when: sudo_host_alias is defined
 
-# Remove any active SUDO group aliasses the might become duplicats in the /etc/sudoers.d/group_sudoers file wich will be generated/updated by the role
+# CHECK and REMOVE any active SUDO group aliasses the might become duplicatss in the /etc/sudoers.d/system_sudoers file wich will be generated/updated by the role
 - name: 'REMOVE any active Sudo Group_Alias duplicates from /etc/sudoers'
-  replace:
-        dest: /etc/sudoers
-        regexp: '^(\s*)Host_Alias {{item|upper}} =(\s+.*)?$'
-        replace: '# Host_Alias {{item|upper}} = \2'
+  vars:
+        CK_SUDO_DATA:
+                CK_pattern: '^(|\s+)User_Alias(\s+){{item|upper}}(\s+)=(\s+.*)?$'
+                CK_pattern_replace: '# User_Alias {{item|upper}} = \4'
+                CK_exclusion_pattern: 'system_sudoers'
+                CK_location: '/etc/sudoer*'
+  include: "checks/check_sudo_alias_duplicates.yml"
   with_items: "{{sudo_group_alias}}"
   when: sudo_group_alias is defined
 
-# Prepare or update the /etc/sudoers.d/group-sudoers file with the defined role data and validate new configuration
-- name: 'PREAPARE /etc/sudoers.d/group_sudoers file'
+# CHECK and REMOVE any active SUDO user aliasses the might become duplicates in the /etc/sudoers.d/system_sudoers fie which will be generated/updated by the role
+- name: 'CHECK and REMOVE any active Sudo User+Alias duplicates from /etc/sudoers'
+  vars:
+        CK_SUDO_DATA:
+                CK_pattern: '^(|\s+)User_Alias(\s+){{item|upper}}(\s+)=(\s+.*)?$'
+                CK_pattern_replace: '# User_Alias {{item|upper}} = \4'
+                CK_exclusion_pattern: 'system_sudoers'
+                CK_location: '/etc/sudoer*'
+  include: "checks/check_sudo_alias_duplicates.yml"
+  with_items: "{{sudo_user_alias}}"
+  when: sudo_user_alias is defined
+
+# CHECK wheatehr the presented command are present on the system - recurrent check using secondary file command_check that includes an additional loop
+- name: 'CHECK that presented commands in CMND ALIAS if they are available on the system'
+  include: checks/check_commands.yml
+  with_dict: "{{sudo_cmnd_alias}}"
+  loop_control: 
+        loop_var: command_to_check
+
+- name: 'CHECK that presented commands under system_groups.sudo are available on the system'
+  include: checks/check_commands.yml
+  with_subelements: 
+        - "{{system_groups}}"
+        - sudo
+        - flags:
+          skip_missing: True
+  loop_control:
+        loop_var: command_to_check
+
+# Prepare or update the /etc/sudoers.d/sudoers file with the defined role data and validate new configuration
+- name: 'PREAPARE /etc/sudoers.d/sudoers file'
   template: 
-        src: 'etc/sudoers.d/group_sudoers.j2'
-        dest: '/etc/sudoers.d/group_sudoers'
+        src: 'etc/sudoers.d/system_sudoers.j2'
+        dest: '/etc/sudoers.d/system_sudoers'
         group: root
         owner: root
         mode: 0440
         validate: 'visudo -cf %s'
-  become: true

@@ -33,12 +33,24 @@
 {% if sudo_group_alias is defined and sudo_group_alias is not none %}
 {% for name,value in sudo_group_alias.iteritems() %}
 {% if value is not string and value is iterable %}
- User_Alias {{name|upper}} = {{value|join(', ')}}
+ User_Alias {{name|upper}} = %{{value|join(', %')}}
 {% elif value is not none %}
- User_Alias {{name|upper}} = {{value}}
+ User_Alias {{name|upper}} = %{{value}}
 {% endif %}
 {% endfor %}
 {% endif %}
+
+## Define User Aliasses
+{% if sudo_users_alias is defined and sudo_users_alias is not none %}
+{% for name,value in sudo_users_alias.iteritems() %}
+{% if value is not string and value is iterable %}
+ User_Alias {{name|upper}} = %{{value|join(', %')}}
+{% elif value is not none %}
+ User_Alias {{name|upper}} = %{{value}}
+{% endif %}
+{% endfor %}
+{% endif %}
+
 
 ## Define SUDO rights on groups 
 {% if system_groups is defined %}
@@ -56,8 +68,10 @@
 {% else %}
 {% set tmp_value = tmp_value+'=(nobody:nobody)' %}
 {% endif %}
-{% if value_sudo.nopasswd is defined and value_sudo.nopasswd == "yes" %}
-{% set tmp_value = tmp_value+' NOPASSWD:' %}
+{% if value_sudo.options is defined and value_sudo.options is string  %}
+{% set tmp_value = tmp_value+' '+value_sudo.options+':' %}
+{% elif value_sudo.options is defined and value_sudo.options is not string and value_sudo.options is iterable %}
+{% set tmp_value = tmp_value+' '+value_sudo.options|join(': ')+':' %}
 {% endif %}
 {% if value_sudo.command is defined and value_sudo.command is iterable and value_sudo.command is not string %}
 {% set tmp_value = tmp_value+' '+value_sudo.command|join(', ')  %}
@@ -72,3 +86,36 @@
 {% endfor %}
 {% endif %}
 
+#Define SUDO rights on users
+{% if system_users is defined %}
+{% for value in system_users %}
+{% if value.sudo is defined %}
+{% for value_sudo in value.sudo %}
+{% set tmp_value = value.name %}
+{% if value_sudo.place is defined and value_sudo.place is not none %}
+{% set tmp_value = tmp_value+' '+value_sudo.place %}
+{% else %}
+{% set tmp_value = tmp_value+' localhost' %}
+{% endif %}
+{% if value_sudo.run_as is defined and value_sudo.run_as is not none %}
+{% set tmp_value = tmp_value+'=('+value_sudo.run_as+')' %}
+{% else %}
+{% set tmp_value = tmp_value+'=(nobody:nobody)' %}
+{% endif %}
+{% if value_sudo.options is defined and value_sudo.options is string  %}
+{% set tmp_value = tmp_value+' '+value_sudo.options+':' %}
+{% elif value_sudo.options is defined and value_sudo.options is not string and value_sudo.options is iterable %}
+{% set tmp_value = tmp_value+' '+value_sudo.options|join(': ')+':' %}
+{% endif %}
+{% if value_sudo.command is defined and value_sudo.command is iterable and value_sudo.command is not string %}
+{% set tmp_value = tmp_value+' '+value_sudo.command|join(', ')  %}
+{% elif value_sudo.command is defined and value_sudo.command is not none %}
+{% set tmp_value = tmp_value+' '+value_sudo.command %}
+{% else %}
+{% set tmp_value = tmp_value+' ALL' %}
+{% endif %}
+{{tmp_value}}
+{% endfor %}
+{% endif %}
+{% endfor %}
+{% endif %}

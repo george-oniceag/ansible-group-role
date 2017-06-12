@@ -1,0 +1,85 @@
+# ..tasks/configure_users.yml
+# Tasks to configure defined users on systems
+#
+# Create user home directory if not present
+- name: 'Create users home path'
+  file: dest={{item.home|realpath}} state=directory 
+  with_items: "{{system_users}}"
+  when: item.home is defined
+
+# FAIL if no group value is defined for any user but parameter is present in the list
+- name: 'FAIL data for user group'
+  fail: 
+        msg: "ERROR !!! For user: {{item}} - please remove group parameter or provide a correct value !!!"
+  with_items: "{{system_users}}"
+  when: item.group is defined and item.group is none
+
+# FAIL if no UID data is defined for any user but parameter is present in the list
+- name: 'FAIL data for user aditional groups'
+  fail: 
+        msg: "ERROR !!! For user: {{item}} - please remove user_id parameters or provide a correct value !!!"
+  with_items: "{{system_users}}"
+  when: item.user_id is defined and item.user_id is none
+
+# FAIL if specified shell is not present on the system
+- name: 'CHECK User shell existance on the system'
+  stat: path="{{item.shell}}"
+  with_items: "{{system_users}}"
+  register: ck_user_shell
+  when: item.shell is defined and not item.shell is none
+
+- name: 'FAIL when user requested shell is not present on the system'
+  fail: 
+        msg: "ERROR !!! For user: {{item.item.name}} - shell path: {{item.item.shell}} !!! is not existent !!!"
+  with_items: "{{ck_user_shell.results}}"
+  when: item.stat is defined and item.stat.exists == false
+
+# FAIL if password dota is not defined corectly 
+- name: 'FAILT when no password defined but parameter was set'
+  fail:
+        msg: "ERROR !!! For user: {{item.name}} - please remove password parameter or proviede a correct value !!!"
+  with_items: "{{system_users}}"
+  when: item.password is defined and item.password is none
+
+# FAIL if update_password is set but password data is not defined
+- name: 'FAIL if update_password is set but no password parameter defined'
+  fail:
+        msg: "ERROR !!!  For user: {{item.name}} - please provide a password !!!"
+  with_items: "{{system_users}}"
+  when: item.update_password is defined and not item.password is defined
+
+# FAIL if update_password data is not defined correctly
+- name: 'FAIL when update_password is incorrect'
+  fail:
+        msg: "ERROR !!! For user: {{item.name}} - please correct update_password value to : always/on_create options __ NOT: {{item.update_password}}"
+  with_items: "{{system_users}}"
+  when: 
+        - item.update_password is defined
+        - not item.update_password == "always" and not item.update_password == "on_create"
+
+# Create users
+- name: 'Create or Update Users'
+  user: name={{item.name}} state=present group={{item.group|default('users')}} comment="{{item.comment|default('')}} - Ansible created USER" createhome={{item.createhome|default('yes') }} home={{item.home|default(omit)}} system={{item.system_user|default('no')}} uid={{item.user_id|default(omit)}} groups={{item.groups|default(omit)}} shell={{item.shell|default(omit)}} move_home=yes password={{item.password|default(omit)|password_hash('sha512')}} update_password={{item.update_password|default(omit)}}
+  with_items: "{{system_users}}"
+  when: 
+        - item.status is not defined or item.status|lower == "present" or item.status|lower == "yes" or item.status|lower == "active" or item.status|lower == "true"
+        - item.createhome is not defined or item.createhome == "yes" or item.createhome == "no"  
+        - item.system_user is not defined or item.system_user == "yes" or item.system_user == "no"
+
+# Remove users
+- name: 'Remove Users'
+  user: name={{item.name}} state=absent remove=yes
+  with_items: "{{system_users}}"
+  when:
+        - item.status is defined
+        - item.status|lower == "absent" or item.status|lower == "no" or item.status|lower == "inactive" or item.status|lower == "false" or item.status|lower == "removed" or item.status|lower == "deleted"
+
+# Configure EXCLUSIVE ssh keys for users
+- name: Configure EXCLUSIVE User SSH keys
+  vars:
+        CONF_publickeys:
+                user: "{{item.name}}"
+  include: configure_publickeys.yml
+  with_items: "{{system_users}}"
+
+  

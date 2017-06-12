@@ -5,7 +5,6 @@
 - name: Create standard groups
   group: name="{{item.name}}" state=present system={{item.system_group|default('no')}}
   with_items: "{{system_groups}}"
-  become: true
   when:  
         - item.group_id is not defined
         - item.status is not defined or item.status|lower == "present" or item.status|lower == "yes" or item.status|lower == "active" or item.status|lower == "true" 
@@ -14,7 +13,6 @@
 - name: Create advanced groups
   group: name="{{item.name}}" state=present gid="{{item.group_id}}" system={{item.system_group|default('no')}}
   with_items: "{{system_groups}}"
-  become: true
   when: 
         - item.group_id is defined 
         - item.status is not defined or item.status|lower == "present" or item.status|lower == "yes" or item.status|lower == "active" or item.status|lower == "true" 
@@ -23,7 +21,6 @@
 - name: Remove groups
   group: name="{{item.name}}" state=absent
   with_items: "{{system_groups}}"
-  become: true
   when: 
         - item.status is defined
         - item.status|lower == "absent" or item.status|lower == "no" or item.status|lower == "inactive" or item.status|lower == "false" or item.status|lower == "removed" or item.status|lower == "deleted"

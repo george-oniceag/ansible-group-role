@@ -5,14 +5,25 @@
 # Prepare all ncessary dependancies for role
 - name: Prepare dependancies 
   include: "{{ansible_os_family|lower}}_deps.yml"
-  tags: ['deps','group-role']
+  become: true
+  tags: ['deps','full-role-run']
 
 # Start group configuration part
-- name: Configure groups
+- name: Configure Groups
   include: configure_groups.yml
-  tags: ['groups','group-role']
+  when: system_groups is defined
+  become: true
+  tags: ['groups','full-role-run']
+
+# Start user configuration part
+- name: Configure Users
+  include: configure_users.yml
+  when: system_users is defined
+  become: true
+  tags: ['users','full-role-run']
 
 # Start group sudo configuration part
 - name: Configure sudo status for groups
   include: configure_sudoers.yml
-  tags: ['sudo','group-role']
+  become: true
+  tags: ['sudo','full-role-run']

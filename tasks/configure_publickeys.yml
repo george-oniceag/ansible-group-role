@@ -1,0 +1,29 @@
+# ../tasks/configure_publickeys.yml
+#
+# !!! WARNING !!!
+# Dict usage:
+#       CONF_publickeys:
+#               user: <<username>>
+#
+# Tasks to configure the users public keys if provided
+#
+# Check the existance of public key files in the playbook structure
+- name: 'CHECK existance of public user key files in playbook structure'
+  stat: path="{{playbook_dir}}/files/public_keys/{{CONF_publickeys.user}}.keyfile"
+  register: ck_publickey_file
+  delegate_to: localhost
+
+# Check the existance of public key files in the role structure
+- name: 'CHECK existance of public user key files in role structure'
+  stat: path="{{role_path}}/files/public_keys/{{CONF_publickeys.user}}.keyfile"
+  register: ck_publickey_file
+  delegate_to: localhost
+  when: ck_publickey_file.stat.exists == false
+
+# Maintain and configure authorized keys for user
+- name: 'CONFIGURE authorized keys for user: {{CONF_publickeys.user}}'
+  authorized_key: exclusive=yes key="{{ssh_key}}" user={{CONF_publickeys.user}} state=present manage_dir=yes
+  with_file: "{{ck_publickey_file.stat.path}}"
+  loop_control:
+        loop_var: ssh_key
+  when: ck_publickey_file.stat.exists == true 

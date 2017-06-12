@@ -13,9 +13,10 @@
 #         system_group: <<yes/no | default('no')>> | Define wheather the group will be a system group
 #         sudo :  ## define sudo rights if needed
 #             - place: <<location_of_run>>  ## The location from witch the user can run command
-#               run_as: <<user|user:group>> ## Run the command as user or as user from group
+#               run_as: <<user|group|user:group>> ## Run the command as user or as user from group
+#                                                 ## For the single <<group>> parameter please provide a % in front of it
 #               command: <<CMND_ALIAS|command>>|['<<CMND_ALIAS|command>>',<<CMND_ALIAS|command>>',...] 
-#               nopasswd: <<'yes/no'>> ## Set no password required flagh
+#               options: ['option1','option2'...] ## Set sudo options
 #             - place: .... etc
 ########################################
 system_groups:
@@ -27,7 +28,7 @@ system_groups:
               - place: ALL
                 run_as: 'ALL:ALL'
                 command: ALL
-                nopasswd: "yes"
+                options: ['NOPASSWD','SETENV']
         - name: powerusers
           status: present
           group_id: 1102
@@ -40,7 +41,6 @@ system_groups:
                 - place: '10.0.0.1'
                   run_as: 'nobody:nobody'
                   command: ['/usr/sbin/arping','/usr/sbin/ausearch','/usr/bin/ping']
-                  nopasswd: "no"
         - name: guests_extended
           sudo:
                 - place: GROUP_LOCALHOST
@@ -51,11 +51,82 @@ system_groups:
         - name: junk_group
           status: absent
 
+####################################
+# Format:
+# system_users:
+#       - name: <<name_of_the_user>>
+#         status: <<status_of_the_user>> | if not defined - value is 'present'
+#                       | options: active/present/yes/true
+#                       |          absent/removed/no/false/inactive/deleted
+#         group: <<primary_user_group | default('users')>> | Specify the primary user group
+#         comment: <<shot_information_about_the_user>> | if not defined - value is 'Ansible defined USER'
+#         createhome: <<yes/no | default('yes') | Specify wheather to create user home or not.
+#         home: <<the_location_of_the_home_directory | default(omit) >> | Specify the location of the users home directory.
+#                                                                       | DEFAULT - system default location (/home/<usernmae>
+#         system_user: <<set_as_system_user | default('no') >> | WARNING !! Changing this setting after user is created will not be possible
+#         user_id: <<the_static_id_of_the_user>> | WARNING !! Please check group id usage before using this option
+#         groups: <<list_of_additional_groups>> | WARNING !! If left Empty the user will be removed from all groups except the master group
+#         shell: <<the_shell_wich_the_user_can_user>> | WARNING !! Please provide an existing shell or user will not be functionall
+#         password: <<password_string>>               | WARNING !! Please use with ansible-vault for seacurity reasons
+#         update_password: <<always|on_create>> # Specify wheatehr the password will be updated or not. Please use the specified options
+#         sudo :  ## define sudo rights if needed
+#             - place: <<location_of_run>>  ## The location from witch the user can run command
+#               run_as: <<user|group|user:group>> ## Run the command as user or as user from group
+#               command: <<CMND_ALIAS|command>>|['<<CMND_ALIAS|command>>',<<CMND_ALIAS|command>>',...]
+#               options: ['option1','option2'...] ## Set sudo options
+#             - place: .... etc
+########################################
+system_users:
+        - name: masteradmin_user
+          status: present
+          group: masteradmins
+          comment: "Master admini user"
+          createhome: 'yes'
+          home: '/home/masteradmin'
+          system_user: 'no'
+          user_id: 1101
+          groups: ['root','masteradmins']
+          shell: '/bin/bash'
+          password: '{{vault_user_passwd.masteradmin_user}}'
+          update_password: "always"
+          sudo:
+              - place: ALL
+                run_as: 'ALL:ALL'
+                command: ALL
+                options: ['NOPASSWD','SETENV']
+        - name: poweruser
+          status: present
+          group: powerusers
+          shell: '/bin/sh'
+          password: '{{vault_user_passwd.poweruser}}'
+          update_password: 'on_create'
+        - name: guests
+          status: present
+          groups:
+          password: 'guest'
+          sudo:
+                - place:
+                  run_as:
+                  command:
+                - place: '10.0.0.1'
+                  run_as: 'nobody:nobody'
+                  command: ['/usr/sbin/arping','/usr/sbin/ausearch','/usr/bin/ping']
+        - name: testsshuser
+        - name: junk_user
+          status: absent
+
+##################################
+#Alias Definition Format
+#
+#sudo_<<type>>_alias:
+#       <<alias_name|upper>> : ['info1','info2'...]
+#
+##################################
           
 sudo_cmnd_alias:
-        SHELLS: ['/sbin/sh','/usr/bin/sh','/usr/bin/csh','/usr/bin/ksh','/usr/local/bin/tcsh','/usr/bin/rsh','/usr/local/bin/zsh']
+        SHELLS: ['/usr/bin/sh','/usr/bin/bash']
         REBOOT: ['/usr/sbin/reboot']
-        SOFTWARE: ['/bin/rpm','/usr/bin/up2date','/usr/bin/yum']
+        SOFTWARE: ['/bin/rpm','/usr/bin/yum']
         SERVICES: ['/sbin/service','/sbin/chkconfig','/usr/bin/systemctl start','/usr/bin/systemctl stop','/usr/bin/systemctl reload','/usr/bin/systemctl restart','/usr/bin/systemctl status','/usr/bin/systemctl enable','/usr/bin/systemctl disable']
 
 sudo_host_alias:
@@ -66,3 +137,6 @@ sudo_group_alias:
         GROUP_MASTERADMINS: ['root','masteradmins']
         GROUP_USERS: ['users']
         GROUP_NOBODY:
+
+sudo_user_alias:
+        USER_TESTALIAS: ['testsshuser','masteradmin_user']
