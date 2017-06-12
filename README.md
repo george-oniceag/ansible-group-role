@@ -1,4 +1,4 @@
-#Ansible "GROUP-ROLE"
+#Ansible "ANSIBLE-GROUP-USER-ROLE"
 ===================
 
 A role for [Ansible](http://www.ansible.com) to configure Operating System Groups & Users for linux based OS's and applying the needed [sudo](https://www.sudo.ws/man/1.8.18/sudo.man.html) rights.
